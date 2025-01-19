@@ -1,0 +1,124 @@
+import pygame
+import random
+import math
+
+# Initialize pygame
+pygame.init()
+
+# Set up the display
+screen_width = 800
+screen_height = 600
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Cube Game of Tag")
+
+# Define colors
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+
+# Cube settings
+player_size = 50
+ai_size = 50
+player_speed = 5
+ai_speed = 2
+
+# Player and AI positions
+player_pos = [screen_width // 2, screen_height // 2]
+ai_pos = [random.randint(0, screen_width - ai_size), random.randint(0, screen_height - ai_size)]
+
+# Set up clock
+clock = pygame.time.Clock()
+
+# Define game state variables
+player_is_tagger = False  # Initially, the AI is the tagger
+
+# Function to move the player
+def move_player(keys, pos):
+    if keys[pygame.K_LEFT] and pos[0] > 0:
+        pos[0] -= player_speed
+    if keys[pygame.K_RIGHT] and pos[0] < screen_width - player_size:
+        pos[0] += player_speed
+    if keys[pygame.K_UP] and pos[1] > 0:
+        pos[1] -= player_speed
+    if keys[pygame.K_DOWN] and pos[1] < screen_height - player_size:
+        pos[1] += player_speed
+
+# Function to move the AI (running away or chasing the player)
+def move_ai(player_pos, ai_pos):
+    dx = player_pos[0] - ai_pos[0]
+    dy = player_pos[1] - ai_pos[1]
+    distance = math.sqrt(dx**2 + dy**2)
+
+    # Prevent division by zero
+    if distance != 0:
+        dx /= distance
+        dy /= distance
+
+    if player_is_tagger:
+        # AI runs away from the player (opposite direction)
+        ai_pos[0] -= ai_speed * dx
+        ai_pos[1] -= ai_speed * dy
+    else:
+        # AI chases the player
+        ai_pos[0] += ai_speed * dx
+        ai_pos[1] += ai_speed * dy
+
+    # Ensure AI doesn't go off the screen
+    ai_pos[0] = max(0, min(ai_pos[0], screen_width - ai_size))
+    ai_pos[1] = max(0, min(ai_pos[1], screen_height - ai_size))
+
+# Main game loop
+running = True
+while running:
+    # Handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Get key states
+    keys = pygame.key.get_pressed()
+
+    # Move player
+    move_player(keys, player_pos)
+
+    # Move AI based on current game state
+    move_ai(player_pos, ai_pos)
+
+    # Check for collision (AI tags player or player tags AI)
+    player_rect = pygame.Rect(player_pos[0], player_pos[1], player_size, player_size)
+    ai_rect = pygame.Rect(ai_pos[0], ai_pos[1], ai_size, ai_size)
+
+    if player_rect.colliderect(ai_rect) and player_is_tagger:
+        print("Player tagged the AI! Now the AI is the tagger.")
+        player_is_tagger = False  # Player tagged the AI, so now the AI is the tagger
+        # Reset positions when tagged
+        player_pos = [screen_width // 2, screen_height // 2]
+        ai_pos = [random.randint(0, screen_width - ai_size), random.randint(0, screen_height - ai_size)]
+    
+    elif ai_rect.colliderect(player_rect) and not player_is_tagger:
+        print("AI tagged the player! Now the player is the tagger.")
+        player_is_tagger = True  # AI tagged the player, so now the player is the tagger
+        # Reset positions when tagged
+        player_pos = [screen_width // 2, screen_height // 2]
+        ai_pos = [random.randint(0, screen_width - ai_size), random.randint(0, screen_height - ai_size)]
+
+    # Fill the screen with white
+    screen.fill(WHITE)
+
+    # Draw the player (green if the player is the tagger, red if not) and AI (red if the AI is the tagger, green if not)
+    if player_is_tagger:
+        pygame.draw.rect(screen, GREEN, (player_pos[0], player_pos[1], player_size, player_size))
+        pygame.draw.rect(screen, RED, (ai_pos[0], ai_pos[1], ai_size, ai_size))
+    else:
+        pygame.draw.rect(screen, RED, (player_pos[0], player_pos[1], player_size, player_size))
+        pygame.draw.rect(screen, GREEN, (ai_pos[0], ai_pos[1], ai_size, ai_size))
+
+    # Update the display
+    pygame.display.update()
+
+    # Frame rate
+    clock.tick(60)
+
+# Quit pygame
+pygame.quit()
