@@ -20,8 +20,8 @@ BLUE = (0, 0, 255)
 # Cube settings
 player_size = 50
 ai_size = 50
-player_speed = 5
-ai_speed = 2
+player_speed = 5.5
+ai_speed = 3.4
 
 # Player and AI positions
 player_pos = [screen_width // 2, screen_height // 2]
